@@ -501,8 +501,12 @@ func ndAddOrReplaceBlock(runtime *goja.Runtime) func(goja.FunctionCall) goja.Val
 	}
 }
 
-// ndGetData returns a value from a block's data map.
+// ndGetData returns a value from a block's data map. If the key is missing the
+// optional default value is returned, or an empty string if no default was
+// provided.
 func ndGetData(runtime *goja.Runtime) func(goja.FunctionCall) goja.Value {
+	emptyString := runtime.ToValue("")
+
 	return func(call goja.FunctionCall) goja.Value {
 		if len(call.Arguments) < 2 || len(call.Arguments) > 3 {
 			panic(runtime.NewTypeError(
@@ -519,31 +523,24 @@ func ndGetData(runtime *goja.Runtime) func(goja.FunctionCall) goja.Value {
 
 		key := call.Arguments[1].String()
 
+		fallback := emptyString
+		if len(call.Arguments) == 3 {
+			fallback = call.Arguments[2]
+		}
+
 		dataVal, ok := blockMap["data"]
 		if !ok || dataVal == nil {
-			if len(call.Arguments) == 3 {
-				return call.Arguments[2]
-			}
-
-			return goja.Null()
+			return fallback
 		}
 
 		dataMap, ok := toMap(dataVal)
 		if !ok {
-			if len(call.Arguments) == 3 {
-				return call.Arguments[2]
-			}
-
-			return goja.Null()
+			return fallback
 		}
 
 		v, ok := dataMap[key]
 		if !ok || v == nil {
-			if len(call.Arguments) == 3 {
-				return call.Arguments[2]
-			}
-
-			return goja.Null()
+			return fallback
 		}
 
 		return runtime.ToValue(v)

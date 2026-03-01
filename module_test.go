@@ -348,8 +348,8 @@ var block = {type: "core/image", data: {width: "800"}};
 nd.get_data(block, "format");
 `)
 
-	if !goja.IsNull(result) {
-		t.Errorf("expected null, got %v", result.Export())
+	if result.Export() != "" {
+		t.Errorf("expected empty string, got %v", result.Export())
 	}
 }
 

@@ -127,10 +127,10 @@ declare const nd: {
   ): Block[];
 
   /**
-   * Returns a value from a block's data map. Returns defaultValue (or null) if
-   * the key is missing.
+   * Returns a value from a block's data map. Returns defaultValue (or an empty
+   * string) if the key is missing.
    */
-  get_data(block: Block, key: string, defaultValue?: string): string | null;
+  get_data(block: Block, key: string, defaultValue?: string): string;
 
   /** Merges updates into data, returning a new map (no mutation). */
   upsert_data(
