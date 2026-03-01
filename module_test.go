@@ -423,6 +423,59 @@ nd.data_defaults(data, {width: "100", height: "100", format: "jpeg"});
 	}
 }
 
+func TestUndefinedBlockSlice(t *testing.T) {
+	tests := []struct {
+		name string
+		code string
+	}{
+		{
+			name: "first_block with undefined",
+			code: `nd.first_block(undefined, {type: "core/text"})`,
+		},
+		{
+			name: "all_blocks with undefined",
+			code: `nd.all_blocks(undefined, {type: "core/text"})`,
+		},
+		{
+			name: "has_block with undefined",
+			code: `nd.has_block(undefined, {type: "core/text"})`,
+		},
+		{
+			name: "drop_blocks with undefined",
+			code: `nd.drop_blocks(undefined, {type: "core/text"})`,
+		},
+		{
+			name: "dedupe_blocks with undefined",
+			code: `nd.dedupe_blocks(undefined, {type: "core/text"})`,
+		},
+		{
+			name: "upsert_block with undefined appends default",
+			code: `
+var result = nd.upsert_block(undefined, {type: "core/newsvalue"},
+    {type: "core/newsvalue", value: "1"},
+    function(b) { return b; });
+if (result.length !== 1) throw new Error("expected 1 block, got " + result.length);
+result;
+`,
+		},
+		{
+			name: "add_or_replace_block with undefined appends",
+			code: `
+var result = nd.add_or_replace_block(undefined, {type: "core/newsvalue"},
+    {type: "core/newsvalue", value: "1"});
+if (result.length !== 1) throw new Error("expected 1 block, got " + result.length);
+result;
+`,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			evalJS(t, tt.code)
+		})
+	}
+}
+
 func TestMultiFieldCriteria(t *testing.T) {
 	result := evalJS(t, `
 var blocks = [

@@ -39,7 +39,13 @@ func newNDModule(runtime *goja.Runtime) *goja.Object {
 }
 
 // requireBlockSlice extracts and validates a []any from the first argument.
+// Nil and undefined are treated as an empty slice so that callers can pass
+// optional document fields (e.g. doc.meta) without a nil guard.
 func requireBlockSlice(runtime *goja.Runtime, val goja.Value, funcName string) []any {
+	if val == nil || goja.IsUndefined(val) || goja.IsNull(val) {
+		return []any{}
+	}
+
 	exported := val.Export()
 
 	slice, ok := toSlice(exported)
