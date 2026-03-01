@@ -134,7 +134,7 @@ declare const nd: {
 
   /** Merges updates into data, returning a new map (no mutation). */
   upsert_data(
-    data: Record<string, string>,
+    data: Record<string, string> | undefined,
     updates: Record<string, string>,
   ): Record<string, string>;
 
@@ -143,7 +143,7 @@ declare const nd: {
    * (no mutation).
    */
   data_defaults(
-    data: Record<string, string>,
+    data: Record<string, string> | undefined,
     defaults: Record<string, string>,
   ): Record<string, string>;
 };

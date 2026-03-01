@@ -423,6 +423,40 @@ nd.data_defaults(data, {width: "100", height: "100", format: "jpeg"});
 	}
 }
 
+func TestUpsertDataUndefined(t *testing.T) {
+	result := evalJS(t, `
+nd.upsert_data(undefined, {format: "png"});
+`)
+
+	m, ok := toMap(result.Export())
+	if !ok {
+		t.Fatalf("expected object, got %T", result.Export())
+	}
+
+	if getString(m, "format") != "png" {
+		t.Errorf("format: expected 'png', got %q", getString(m, "format"))
+	}
+}
+
+func TestDataDefaultsUndefined(t *testing.T) {
+	result := evalJS(t, `
+nd.data_defaults(undefined, {width: "100", height: "100"});
+`)
+
+	m, ok := toMap(result.Export())
+	if !ok {
+		t.Fatalf("expected object, got %T", result.Export())
+	}
+
+	if getString(m, "width") != "100" {
+		t.Errorf("width: expected '100', got %q", getString(m, "width"))
+	}
+
+	if getString(m, "height") != "100" {
+		t.Errorf("height: expected '100', got %q", getString(m, "height"))
+	}
+}
+
 func TestUndefinedBlockSlice(t *testing.T) {
 	tests := []struct {
 		name string

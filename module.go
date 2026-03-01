@@ -547,6 +547,25 @@ func ndGetData(runtime *goja.Runtime) func(goja.FunctionCall) goja.Value {
 	}
 }
 
+// optionalDataMap extracts a map[string]any from a goja value. Nil, undefined,
+// and null are treated as an empty map so that callers can pass optional block
+// data fields directly.
+func optionalDataMap(runtime *goja.Runtime, val goja.Value, funcName, argName string) map[string]any {
+	if val == nil || goja.IsUndefined(val) || goja.IsNull(val) {
+		return map[string]any{}
+	}
+
+	exported := val.Export()
+
+	m, ok := toMap(exported)
+	if !ok {
+		panic(runtime.NewTypeError(
+			"%s: %s must be an object, got %T", funcName, argName, exported))
+	}
+
+	return m
+}
+
 // ndUpsertData merges new_data into data, returning a new map (no mutation).
 func ndUpsertData(runtime *goja.Runtime) func(goja.FunctionCall) goja.Value {
 	return func(call goja.FunctionCall) goja.Value {
@@ -555,21 +574,10 @@ func ndUpsertData(runtime *goja.Runtime) func(goja.FunctionCall) goja.Value {
 				"nd.upsert_data: expected 2 arguments, got %d", len(call.Arguments)))
 		}
 
-		baseExport := call.Arguments[0].Export()
-
-		base, ok := toMap(baseExport)
-		if !ok {
-			panic(runtime.NewTypeError(
-				"nd.upsert_data: first argument must be an object, got %T", baseExport))
-		}
-
-		updatesExport := call.Arguments[1].Export()
-
-		updates, ok := toMap(updatesExport)
-		if !ok {
-			panic(runtime.NewTypeError(
-				"nd.upsert_data: second argument must be an object, got %T", updatesExport))
-		}
+		base := optionalDataMap(runtime, call.Arguments[0],
+			"nd.upsert_data", "first argument")
+		updates := optionalDataMap(runtime, call.Arguments[1],
+			"nd.upsert_data", "second argument")
 
 		result := make(map[string]any, len(base)+len(updates))
 		for k, v := range base {
@@ -592,21 +600,10 @@ func ndDataDefaults(runtime *goja.Runtime) func(goja.FunctionCall) goja.Value {
 				"nd.data_defaults: expected 2 arguments, got %d", len(call.Arguments)))
 		}
 
-		dataExport := call.Arguments[0].Export()
-
-		data, ok := toMap(dataExport)
-		if !ok {
-			panic(runtime.NewTypeError(
-				"nd.data_defaults: first argument must be an object, got %T", dataExport))
-		}
-
-		defaultsExport := call.Arguments[1].Export()
-
-		defaults, ok := toMap(defaultsExport)
-		if !ok {
-			panic(runtime.NewTypeError(
-				"nd.data_defaults: second argument must be an object, got %T", defaultsExport))
-		}
+		data := optionalDataMap(runtime, call.Arguments[0],
+			"nd.data_defaults", "first argument")
+		defaults := optionalDataMap(runtime, call.Arguments[1],
+			"nd.data_defaults", "second argument")
 
 		result := make(map[string]any, len(data)+len(defaults))
 		for k, v := range data {
