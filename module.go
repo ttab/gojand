@@ -2,6 +2,7 @@ package gojand
 
 import (
 	"fmt"
+	"maps"
 
 	"github.com/dop251/goja"
 )
@@ -189,6 +190,7 @@ func ndDropBlocks(runtime *goja.Runtime) func(goja.FunctionCall) goja.Value {
 			m, ok := toMap(item)
 			if !ok {
 				result = append(result, item)
+
 				continue
 			}
 
@@ -233,6 +235,7 @@ func ndDedupeBlocks(runtime *goja.Runtime) func(goja.FunctionCall) goja.Value {
 			m, ok := toMap(item)
 			if !ok {
 				result = append(result, item)
+
 				continue
 			}
 
@@ -244,6 +247,7 @@ func ndDedupeBlocks(runtime *goja.Runtime) func(goja.FunctionCall) goja.Value {
 			if matched {
 				if !found {
 					found = true
+
 					result = append(result, item)
 				}
 			} else {
@@ -286,6 +290,7 @@ func ndAlterBlocks(runtime *goja.Runtime) func(goja.FunctionCall) goja.Value {
 			m, ok := toMap(item)
 			if !ok {
 				result = append(result, item)
+
 				continue
 			}
 
@@ -343,12 +348,14 @@ func ndAlterFirstBlock(runtime *goja.Runtime) func(goja.FunctionCall) goja.Value
 		for _, item := range blocks {
 			if altered {
 				result = append(result, item)
+
 				continue
 			}
 
 			m, ok := toMap(item)
 			if !ok {
 				result = append(result, item)
+
 				continue
 			}
 
@@ -410,12 +417,14 @@ func ndUpsertBlock(runtime *goja.Runtime) func(goja.FunctionCall) goja.Value {
 		for _, item := range blocks {
 			if found {
 				result = append(result, item)
+
 				continue
 			}
 
 			m, ok := toMap(item)
 			if !ok {
 				result = append(result, item)
+
 				continue
 			}
 
@@ -471,12 +480,14 @@ func ndAddOrReplaceBlock(runtime *goja.Runtime) func(goja.FunctionCall) goja.Val
 		for _, item := range blocks {
 			if replaced {
 				result = append(result, item)
+
 				continue
 			}
 
 			m, ok := toMap(item)
 			if !ok {
 				result = append(result, item)
+
 				continue
 			}
 
@@ -580,13 +591,9 @@ func ndUpsertData(runtime *goja.Runtime) func(goja.FunctionCall) goja.Value {
 			"nd.upsert_data", "second argument")
 
 		result := make(map[string]any, len(base)+len(updates))
-		for k, v := range base {
-			result[k] = v
-		}
 
-		for k, v := range updates {
-			result[k] = v
-		}
+		maps.Copy(result, base)
+		maps.Copy(result, updates)
 
 		return toJSValue(runtime, result)
 	}
@@ -606,14 +613,14 @@ func ndDataDefaults(runtime *goja.Runtime) func(goja.FunctionCall) goja.Value {
 			"nd.data_defaults", "second argument")
 
 		result := make(map[string]any, len(data)+len(defaults))
-		for k, v := range data {
-			result[k] = v
-		}
+
+		maps.Copy(result, data)
 
 		for k, v := range defaults {
 			existing, exists := result[k]
 			if !exists {
 				result[k] = v
+
 				continue
 			}
 

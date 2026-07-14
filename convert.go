@@ -261,5 +261,6 @@ func toSlice(v any) ([]any, bool) {
 // toMap coerces a goja export to map[string]any.
 func toMap(v any) (map[string]any, bool) {
 	m, ok := v.(map[string]any)
+
 	return m, ok
 }

@@ -1,6 +1,10 @@
 package gojand
 
-import "github.com/microcosm-cc/bluemonday"
+import (
+	"maps"
+
+	"github.com/microcosm-cc/bluemonday"
+)
 
 // Option configures a Transformer.
 type Option func(*config)
@@ -36,9 +40,7 @@ func WithGlobal(name string, value any) Option {
 // WithGlobals adds multiple global variables available to the script.
 func WithGlobals(globals map[string]any) Option {
 	return func(c *config) {
-		for k, v := range globals {
-			c.globals[k] = v
-		}
+		maps.Copy(c.globals, globals)
 	}
 }
 

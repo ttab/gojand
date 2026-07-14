@@ -1,10 +1,11 @@
-package gojand
+package gojand_test
 
 import (
 	"context"
 	"testing"
 
 	"github.com/microcosm-cc/bluemonday"
+	"github.com/ttab/gojand"
 	"github.com/ttab/newsdoc"
 )
 
@@ -16,7 +17,7 @@ function transform(doc) {
 }
 `
 
-	tr, err := NewTransformer(script)
+	tr, err := gojand.NewTransformer(script)
 	if err != nil {
 		t.Fatalf("NewTransformer: %v", err)
 	}
@@ -48,7 +49,7 @@ function transform(doc) {
 }
 `
 
-	tr, err := NewTransformer(script)
+	tr, err := gojand.NewTransformer(script)
 	if err != nil {
 		t.Fatalf("NewTransformer: %v", err)
 	}
@@ -89,7 +90,7 @@ function transform(doc) {
 }
 `
 
-	tr, err := NewTransformer(script)
+	tr, err := gojand.NewTransformer(script)
 	if err != nil {
 		t.Fatalf("NewTransformer: %v", err)
 	}
@@ -119,8 +120,8 @@ function transform(doc) {
 }
 `
 
-	tr, err := NewTransformer(script,
-		WithGlobal("prefix", "BREAKING: "))
+	tr, err := gojand.NewTransformer(script,
+		gojand.WithGlobal("prefix", "BREAKING: "))
 	if err != nil {
 		t.Fatalf("NewTransformer: %v", err)
 	}
@@ -148,7 +149,7 @@ function process(doc) {
 }
 `
 
-	tr, err := NewTransformer(script, WithFuncName("process"))
+	tr, err := gojand.NewTransformer(script, gojand.WithFuncName("process"))
 	if err != nil {
 		t.Fatalf("NewTransformer: %v", err)
 	}
@@ -166,7 +167,7 @@ function process(doc) {
 }
 
 func TestTransformerCompileError(t *testing.T) {
-	_, err := NewTransformer("this is not valid javascript }{}{")
+	_, err := gojand.NewTransformer("this is not valid javascript }{}{")
 	if err == nil {
 		t.Fatal("expected compile error")
 	}
@@ -177,7 +178,7 @@ func TestTransformerMissingFunction(t *testing.T) {
 var x = 42;
 `
 
-	tr, err := NewTransformer(script)
+	tr, err := gojand.NewTransformer(script)
 	if err != nil {
 		t.Fatalf("NewTransformer: %v", err)
 	}
@@ -197,7 +198,7 @@ function transform(doc) {
 }
 `
 
-	tr, err := NewTransformer(script)
+	tr, err := gojand.NewTransformer(script)
 	if err != nil {
 		t.Fatalf("NewTransformer: %v", err)
 	}
@@ -233,7 +234,7 @@ function transform(doc) {
 }
 `
 
-	tr, err := NewTransformer(script)
+	tr, err := gojand.NewTransformer(script)
 	if err != nil {
 		t.Fatalf("NewTransformer: %v", err)
 	}
@@ -299,7 +300,7 @@ function transform(doc) {
 }
 `
 
-	tr, err := NewTransformer(script)
+	tr, err := gojand.NewTransformer(script)
 	if err != nil {
 		t.Fatalf("NewTransformer: %v", err)
 	}
@@ -331,7 +332,7 @@ function transform(doc) {
 }
 `
 
-	tr, err := NewTransformer(script)
+	tr, err := gojand.NewTransformer(script)
 	if err != nil {
 		t.Fatalf("NewTransformer: %v", err)
 	}
@@ -361,7 +362,7 @@ function transform(doc) {
 
 	ugcPolicy := bluemonday.UGCPolicy()
 
-	tr, err := NewTransformer(script, WithPolicy("ugc", ugcPolicy))
+	tr, err := gojand.NewTransformer(script, gojand.WithPolicy("ugc", ugcPolicy))
 	if err != nil {
 		t.Fatalf("NewTransformer: %v", err)
 	}
@@ -390,7 +391,7 @@ function transform(doc: any): any {
 }
 `
 
-	tr, err := NewTransformer(script, WithTypeScript())
+	tr, err := gojand.NewTransformer(script, gojand.WithTypeScript())
 	if err != nil {
 		t.Fatalf("NewTransformer: %v", err)
 	}
@@ -440,7 +441,7 @@ function transform(doc) {
 }
 `
 
-	tr, err := NewTransformer(script)
+	tr, err := gojand.NewTransformer(script)
 	if err != nil {
 		t.Fatalf("NewTransformer: %v", err)
 	}

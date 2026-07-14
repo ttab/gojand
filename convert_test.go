@@ -1,8 +1,9 @@
-package gojand
+package gojand_test
 
 import (
 	"testing"
 
+	"github.com/ttab/gojand"
 	"github.com/ttab/newsdoc"
 )
 
@@ -60,9 +61,9 @@ func TestDocumentRoundTrip(t *testing.T) {
 		},
 	}
 
-	m := DocumentToMap(doc)
+	m := gojand.DocumentToMap(doc)
 
-	got, err := MapToDocument(m)
+	got, err := gojand.MapToDocument(m)
 	if err != nil {
 		t.Fatalf("MapToDocument: %v", err)
 	}
@@ -76,7 +77,7 @@ func TestDocumentEmptyFields(t *testing.T) {
 		Title: "Minimal",
 	}
 
-	m := DocumentToMap(doc)
+	m := gojand.DocumentToMap(doc)
 
 	// Verify that empty fields are omitted.
 	if _, ok := m["uuid"]; ok {
@@ -87,7 +88,7 @@ func TestDocumentEmptyFields(t *testing.T) {
 		t.Error("expected content to be omitted")
 	}
 
-	got, err := MapToDocument(m)
+	got, err := gojand.MapToDocument(m)
 	if err != nil {
 		t.Fatalf("MapToDocument: %v", err)
 	}
@@ -124,9 +125,9 @@ func TestBlockRoundTrip(t *testing.T) {
 		},
 	}
 
-	m := BlockToMap(block)
+	m := gojand.BlockToMap(block)
 
-	got, err := MapToBlock(m)
+	got, err := gojand.MapToBlock(m)
 	if err != nil {
 		t.Fatalf("MapToBlock: %v", err)
 	}
@@ -139,70 +140,19 @@ func TestBlockEmptyFields(t *testing.T) {
 		Type: "core/text",
 	}
 
-	m := BlockToMap(block)
+	m := gojand.BlockToMap(block)
 
 	// Only "type" should be set.
 	if len(m) != 1 {
 		t.Errorf("expected 1 key, got %d", len(m))
 	}
 
-	got, err := MapToBlock(m)
+	got, err := gojand.MapToBlock(m)
 	if err != nil {
 		t.Fatalf("MapToBlock: %v", err)
 	}
 
 	assertBlocksEqual(t, "root", block, got)
-}
-
-func TestDataMapRoundTrip(t *testing.T) {
-	dm := newsdoc.DataMap{
-		"width":  "800",
-		"height": "600",
-		"format": "jpeg",
-	}
-
-	m := dataMapToPlain(dm)
-
-	got, err := plainToDataMap(m)
-	if err != nil {
-		t.Fatalf("plainToDataMap: %v", err)
-	}
-
-	if len(got) != len(dm) {
-		t.Fatalf("expected %d entries, got %d", len(dm), len(got))
-	}
-
-	for k, v := range dm {
-		if got[k] != v {
-			t.Errorf("key %q: expected %q, got %q", k, v, got[k])
-		}
-	}
-}
-
-func TestDataMapInvalidValue(t *testing.T) {
-	m := map[string]any{
-		"ok":  "fine",
-		"bad": 42,
-	}
-
-	_, err := plainToDataMap(m)
-	if err == nil {
-		t.Fatal("expected error for non-string value")
-	}
-}
-
-func TestToBlocksInvalidType(t *testing.T) {
-	_, err := toBlocks("not a slice")
-	if err == nil {
-		t.Fatal("expected error for non-slice")
-	}
-}
-
-func TestToBlocksInvalidElement(t *testing.T) {
-	_, err := toBlocks([]any{"not a map"})
-	if err == nil {
-		t.Fatal("expected error for non-map element")
-	}
 }
 
 func assertDocumentsEqual(t *testing.T, want, got newsdoc.Document) {
