@@ -409,3 +409,92 @@ function transform(doc: any): any {
 		t.Errorf("expected 'TS: Hello', got %q", got.Title)
 	}
 }
+
+func TestTransformerNativeArraySemantics(t *testing.T) {
+	// Array mutations through object properties must behave like real
+	// JS arrays: push/splice reached via a parent property must stick.
+	// This is a regression test for Go slices leaking into the runtime,
+	// where length-changing mutations were silently lost.
+	script := `
+function transform(doc) {
+	// Push onto a document-level array.
+	doc.links.push({rel: "subject", type: "core/story"});
+
+	// Push onto a nested block array reached through properties, both
+	// on an array that came with the document and on one that was
+	// assigned from an nd helper.
+	doc.content = nd.alter_blocks(doc.content, {type: "core/image"}, (b) => {
+		b.links = nd.drop_blocks(b.links, {rel: "self"});
+		b.links.push({rel: "image", type: "tt/picture"});
+		return b;
+	});
+
+	// Splice out the first meta block.
+	doc.meta.splice(0, 1);
+
+	// Push into a deeply nested block array: content -> content ->
+	// links, reached purely through property access.
+	doc.content[1].content[0].links.push({rel: "channel", type: "core/channel"});
+
+	return doc;
+}
+`
+
+	tr, err := NewTransformer(script)
+	if err != nil {
+		t.Fatalf("NewTransformer: %v", err)
+	}
+
+	doc := newsdoc.Document{
+		Type: "core/article",
+		Links: []newsdoc.Block{
+			{Rel: "author", Type: "core/author"},
+		},
+		Meta: []newsdoc.Block{
+			{Type: "core/note"},
+			{Type: "core/newsvalue"},
+		},
+		Content: []newsdoc.Block{
+			{
+				Type: "core/image",
+				Links: []newsdoc.Block{
+					{Rel: "self", Type: "tt/picture"},
+				},
+			},
+			{
+				Type: "tt/factbox",
+				Content: []newsdoc.Block{
+					{
+						Type: "core/text",
+						Links: []newsdoc.Block{
+							{Rel: "subject", Type: "core/story"},
+						},
+					},
+				},
+			},
+		},
+	}
+
+	got, err := tr.Transform(context.Background(), doc)
+	if err != nil {
+		t.Fatalf("Transform: %v", err)
+	}
+
+	if len(got.Links) != 2 || got.Links[1].Rel != "subject" {
+		t.Errorf("expected pushed document link, got %v", got.Links)
+	}
+
+	if len(got.Meta) != 1 || got.Meta[0].Type != "core/newsvalue" {
+		t.Errorf("expected spliced meta, got %v", got.Meta)
+	}
+
+	links := got.Content[0].Links
+	if len(links) != 1 || links[0].Rel != "image" {
+		t.Errorf("expected replaced image link, got %v", links)
+	}
+
+	nested := got.Content[1].Content[0].Links
+	if len(nested) != 2 || nested[1].Rel != "channel" {
+		t.Errorf("expected pushed deeply nested link, got %v", nested)
+	}
+}

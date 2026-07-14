@@ -88,9 +88,10 @@ func (t *Transformer) callTransform(ctx context.Context, arg any) (any, error) {
 		return nil, fmt.Errorf("set html module: %w", err)
 	}
 
-	// Set user globals.
+	// Set user globals. Maps and slices are converted to native JS
+	// values so that scripts get real JS semantics for them.
 	for k, v := range t.globals {
-		err := runtime.Set(k, v)
+		err := runtime.Set(k, toJSValue(runtime, v))
 		if err != nil {
 			return nil, fmt.Errorf("set global %q: %w", k, err)
 		}
@@ -126,8 +127,9 @@ func (t *Transformer) callTransform(ctx context.Context, arg any) (any, error) {
 			"expected %q to be a function", t.funcName)
 	}
 
-	// Call the function with the document map.
-	result, err := fn(goja.Undefined(), runtime.ToValue(arg))
+	// Call the function with the document converted to a native JS
+	// object.
+	result, err := fn(goja.Undefined(), toJSValue(runtime, arg))
 	if err != nil {
 		return nil, fmt.Errorf("call %q: %w", t.funcName, err)
 	}
