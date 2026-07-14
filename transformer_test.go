@@ -432,6 +432,10 @@ function transform(doc) {
 	// Splice out the first meta block.
 	doc.meta.splice(0, 1);
 
+	// Push into a deeply nested block array: content -> content ->
+	// links, reached purely through property access.
+	doc.content[1].content[0].links.push({rel: "channel", type: "core/channel"});
+
 	return doc;
 }
 `
@@ -457,6 +461,17 @@ function transform(doc) {
 					{Rel: "self", Type: "tt/picture"},
 				},
 			},
+			{
+				Type: "tt/factbox",
+				Content: []newsdoc.Block{
+					{
+						Type: "core/text",
+						Links: []newsdoc.Block{
+							{Rel: "subject", Type: "core/story"},
+						},
+					},
+				},
+			},
 		},
 	}
 
@@ -476,5 +491,10 @@ function transform(doc) {
 	links := got.Content[0].Links
 	if len(links) != 1 || links[0].Rel != "image" {
 		t.Errorf("expected replaced image link, got %v", links)
+	}
+
+	nested := got.Content[1].Content[0].Links
+	if len(nested) != 2 || nested[1].Rel != "channel" {
+		t.Errorf("expected pushed deeply nested link, got %v", nested)
 	}
 }
