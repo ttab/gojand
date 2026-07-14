@@ -84,7 +84,7 @@ func ndFirstBlock(runtime *goja.Runtime) func(goja.FunctionCall) goja.Value {
 			}
 
 			if matched {
-				return runtime.ToValue(m)
+				return toJSValue(runtime, m)
 			}
 		}
 
@@ -129,7 +129,7 @@ func ndAllBlocks(runtime *goja.Runtime) func(goja.FunctionCall) goja.Value {
 			result = []any{}
 		}
 
-		return runtime.ToValue(result)
+		return toJSValue(runtime, result)
 	}
 }
 
@@ -206,7 +206,7 @@ func ndDropBlocks(runtime *goja.Runtime) func(goja.FunctionCall) goja.Value {
 			result = []any{}
 		}
 
-		return runtime.ToValue(result)
+		return toJSValue(runtime, result)
 	}
 }
 
@@ -255,7 +255,7 @@ func ndDedupeBlocks(runtime *goja.Runtime) func(goja.FunctionCall) goja.Value {
 			result = []any{}
 		}
 
-		return runtime.ToValue(result)
+		return toJSValue(runtime, result)
 	}
 }
 
@@ -295,7 +295,7 @@ func ndAlterBlocks(runtime *goja.Runtime) func(goja.FunctionCall) goja.Value {
 			}
 
 			if matched {
-				altered, err := fn(goja.Undefined(), runtime.ToValue(m))
+				altered, err := fn(goja.Undefined(), toJSValue(runtime, m))
 				if err != nil {
 					panic(runtime.NewTypeError(
 						"nd.alter_blocks: call alter function: %s", err))
@@ -311,7 +311,7 @@ func ndAlterBlocks(runtime *goja.Runtime) func(goja.FunctionCall) goja.Value {
 			result = []any{}
 		}
 
-		return runtime.ToValue(result)
+		return toJSValue(runtime, result)
 	}
 }
 
@@ -358,7 +358,7 @@ func ndAlterFirstBlock(runtime *goja.Runtime) func(goja.FunctionCall) goja.Value
 			}
 
 			if matched {
-				newItem, err := fn(goja.Undefined(), runtime.ToValue(m))
+				newItem, err := fn(goja.Undefined(), toJSValue(runtime, m))
 				if err != nil {
 					panic(runtime.NewTypeError(
 						"nd.alter_first_block: call alter function: %s", err))
@@ -376,7 +376,7 @@ func ndAlterFirstBlock(runtime *goja.Runtime) func(goja.FunctionCall) goja.Value
 			result = []any{}
 		}
 
-		return runtime.ToValue(result)
+		return toJSValue(runtime, result)
 	}
 }
 
@@ -425,7 +425,7 @@ func ndUpsertBlock(runtime *goja.Runtime) func(goja.FunctionCall) goja.Value {
 			}
 
 			if matched {
-				altered, err := fn(goja.Undefined(), runtime.ToValue(m))
+				altered, err := fn(goja.Undefined(), toJSValue(runtime, m))
 				if err != nil {
 					panic(runtime.NewTypeError(
 						"nd.upsert_block: call upsert function: %s", err))
@@ -443,7 +443,7 @@ func ndUpsertBlock(runtime *goja.Runtime) func(goja.FunctionCall) goja.Value {
 			result = append(result, defaultBlock)
 		}
 
-		return runtime.ToValue(result)
+		return toJSValue(runtime, result)
 	}
 }
 
@@ -497,7 +497,7 @@ func ndAddOrReplaceBlock(runtime *goja.Runtime) func(goja.FunctionCall) goja.Val
 			result = append(result, newBlock)
 		}
 
-		return runtime.ToValue(result)
+		return toJSValue(runtime, result)
 	}
 }
 
@@ -588,7 +588,7 @@ func ndUpsertData(runtime *goja.Runtime) func(goja.FunctionCall) goja.Value {
 			result[k] = v
 		}
 
-		return runtime.ToValue(result)
+		return toJSValue(runtime, result)
 	}
 }
 
@@ -623,6 +623,6 @@ func ndDataDefaults(runtime *goja.Runtime) func(goja.FunctionCall) goja.Value {
 			}
 		}
 
-		return runtime.ToValue(result)
+		return toJSValue(runtime, result)
 	}
 }
