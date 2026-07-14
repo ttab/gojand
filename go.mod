@@ -4,7 +4,7 @@ go 1.25.7
 
 require (
 	github.com/dop251/goja v0.0.0-20260226184354-913bd86fb70c
-	github.com/evanw/esbuild v0.27.3
+	github.com/evanw/esbuild v0.28.1
 	github.com/microcosm-cc/bluemonday v1.0.27
 	github.com/ttab/newsdoc v1.0.0
 )
