@@ -170,3 +170,38 @@ declare const html: {
  * The function name can be changed via WithFuncName on the Go side.
  */
 declare function transform(doc: Document): Document;
+
+/**
+ * An asset rendition extracted from an image block: the address variables
+ * of an asset CDN URL, `/v1/{ns}/{id}/{version}/{selector}/{variant}.{ext}`.
+ * The host application composes and signs the URL.
+ */
+interface Rendition {
+  /** Source namespace, e.g. "mm", "repo". */
+  ns: string;
+  /** Asset id in the namespace's own id scheme. */
+  id: string;
+  /** Asset version; "0" addresses the current version. */
+  version: string;
+  /**
+   * Content selection: "full" (default when omitted) or an image soft crop
+   * "c-{x}-{y}-{w}-{h}" with the core/softcrop coordinate strings verbatim.
+   */
+  selector?: string;
+  /** Rendition variant name, e.g. "preview". */
+  variant: string;
+  /** Output format, e.g. "jpg", "webp". Empty for "original". */
+  ext: string;
+  /** Optional pixel width hint for the rendition. */
+  width?: number;
+  /** Optional pixel height hint for the rendition. */
+  height?: number;
+}
+
+/**
+ * Optional entry point for extracting asset renditions from image blocks.
+ * The host calls it for every block in the transformed document; return
+ * renditions for the blocks that reference an asset, and null (or an empty
+ * array) for everything else.
+ */
+declare function renditions(block: Block): Rendition[] | null;

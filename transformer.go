@@ -3,6 +3,7 @@ package gojand
 import (
 	"context"
 	"fmt"
+	"sync"
 
 	"github.com/dop251/goja"
 	"github.com/evanw/esbuild/pkg/api"
@@ -75,6 +76,30 @@ func (t *Transformer) Transform(ctx context.Context, doc newsdoc.Document) (news
 }
 
 func (t *Transformer) callTransform(ctx context.Context, arg any) (any, error) {
+	session, err := t.NewSession(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	defer session.Close()
+
+	return session.Call(t.funcName, arg)
+}
+
+// Session runs the compiled script in a single runtime so that the host
+// can make repeated function calls without paying runtime setup per call.
+// A Session is not safe for concurrent use; create one per goroutine.
+type Session struct {
+	runtime   *goja.Runtime
+	done      chan struct{}
+	closeOnce sync.Once
+}
+
+// NewSession creates a runtime with the modules and globals set up, runs
+// the script's top-level code, and returns a session for calling the
+// functions it defined. The context cancels or times out script execution
+// within the session. Callers must Close the session when done.
+func (t *Transformer) NewSession(ctx context.Context) (*Session, error) {
 	runtime := goja.New()
 
 	// Set up modules.
@@ -97,42 +122,71 @@ func (t *Transformer) callTransform(ctx context.Context, arg any) (any, error) {
 		}
 	}
 
-	// Context cancellation.
-	done := make(chan struct{})
-	defer close(done)
+	session := Session{
+		runtime: runtime,
+		done:    make(chan struct{}),
+	}
 
+	// Context cancellation.
 	go func() {
 		select {
 		case <-ctx.Done():
 			runtime.Interrupt(ctx.Err())
-		case <-done:
+		case <-session.done:
 		}
 	}()
 
 	// Run top-level code to define functions.
 	_, err = runtime.RunProgram(t.program)
 	if err != nil {
+		session.Close()
+
 		return nil, fmt.Errorf("run script: %w", err)
 	}
 
-	// Get the transform function.
-	fnVal := runtime.Get(t.funcName)
+	return &session, nil
+}
+
+// HasFunction reports whether the script defines a function with the
+// given name.
+func (s *Session) HasFunction(name string) bool {
+	fnVal := s.runtime.Get(name)
 	if fnVal == nil || goja.IsUndefined(fnVal) {
-		return nil, fmt.Errorf("function %q is not defined", t.funcName)
+		return false
+	}
+
+	_, ok := goja.AssertFunction(fnVal)
+
+	return ok
+}
+
+// Call invokes a named function defined by the script. The argument is
+// converted to a native JS value, and the result is exported back as
+// plain Go values (map[string]any, []any, primitives).
+func (s *Session) Call(name string, arg any) (any, error) {
+	fnVal := s.runtime.Get(name)
+	if fnVal == nil || goja.IsUndefined(fnVal) {
+		return nil, fmt.Errorf("function %q is not defined", name)
 	}
 
 	fn, ok := goja.AssertFunction(fnVal)
 	if !ok {
 		return nil, fmt.Errorf(
-			"expected %q to be a function", t.funcName)
+			"expected %q to be a function", name)
 	}
 
-	// Call the function with the document converted to a native JS
-	// object.
-	result, err := fn(goja.Undefined(), toJSValue(runtime, arg))
+	result, err := fn(goja.Undefined(), toJSValue(s.runtime, arg))
 	if err != nil {
-		return nil, fmt.Errorf("call %q: %w", t.funcName, err)
+		return nil, fmt.Errorf("call %q: %w", name, err)
 	}
 
 	return result.Export(), nil
+}
+
+// Close releases the session's context watcher. It is safe to call
+// multiple times.
+func (s *Session) Close() {
+	s.closeOnce.Do(func() {
+		close(s.done)
+	})
 }
