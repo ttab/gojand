@@ -192,10 +192,6 @@ interface Rendition {
   variant: string;
   /** Output format, e.g. "jpg", "webp". Empty for "original". */
   ext: string;
-  /** Optional pixel width hint for the rendition. */
-  width?: number;
-  /** Optional pixel height hint for the rendition. */
-  height?: number;
 }
 
 /**
@@ -203,5 +199,9 @@ interface Rendition {
  * The host calls it for every block in the transformed document; return
  * renditions for the blocks that reference an asset, and null (or an empty
  * array) for everything else.
+ *
+ * Only address variables are returned — the host owns URL composition,
+ * signing, and rendition size hints (variant geometry comes from the
+ * asset service).
  */
 declare function renditions(block: Block): Rendition[] | null;
